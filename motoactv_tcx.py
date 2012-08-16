@@ -44,9 +44,10 @@ def usage():
 def main(argv):
 
     pathToCSV = ""
+    forceHRM = False
 
     try:
-        opts, args = getopt.getopt(argv, "hi:",["ifile="])
+        opts, args = getopt.getopt(argv, "hbi:",["ifile="])
     except getopt.GetoptError:
         usage()
         sys.exit(1)
@@ -57,6 +58,8 @@ def main(argv):
             sys.exit()
         elif opt in ("-i", "--ifile"):
             pathToCSV = arg
+        elif opt == '-b':
+            forceHRM = True
         
     if pathToCSV == "":
         usage()
@@ -133,10 +136,10 @@ def main(argv):
 
         # BPM
         heartRate = math.trunc(float(row['HEARTRATE']))
-        # if heartRate > 0:
-        bpmElement = SubElement(trackpointElement, 'HeartRateBpm xsi:type=\"HeartRateInBeatsPerMinute_t\"')
-        bpmValElement = SubElement(bpmElement, "Value")
-        bpmValElement.text = str(heartRate)
+        if forceHRM or heartRate > 0:
+            bpmElement = SubElement(trackpointElement, 'HeartRateBpm xsi:type=\"HeartRateInBeatsPerMinute_t\"')
+            bpmValElement = SubElement(bpmElement, "Value")
+            bpmValElement.text = str(heartRate)
                 
         extElement = SubElement(trackpointElement, 'Extensions')
         
@@ -182,15 +185,15 @@ def main(argv):
     totalCalsElement.text = str(int(float(calories)))
     
     # BPM
-    # if avgBPM > 0:
-    avgBPMElement = SubElement(lapElement, 'AverageHeartRateBpm xsi:type="HeartRateInBeatsPerMinute_t"')
-    avgBPMValElement = SubElement(avgBPMElement, "Value")
-    avgBPMValElement.text = str(int(avgBPM))
+    if forceHRM or avgBPM > 0:
+        avgBPMElement = SubElement(lapElement, 'AverageHeartRateBpm xsi:type="HeartRateInBeatsPerMinute_t"')
+        avgBPMValElement = SubElement(avgBPMElement, "Value")
+        avgBPMValElement.text = str(int(avgBPM))
 
-    # if maxBPM > 0:
-    maxBPMElement = SubElement(lapElement, 'MaximumHeartRateBpm xsi:type="HeartRateInBeatsPerMinute_t"')
-    maxBPMValElement = SubElement(maxBPMElement, "Value")
-    maxBPMValElement.text = str(int(maxBPM))
+    if forceHRM or maxBPM > 0:
+        maxBPMElement = SubElement(lapElement, 'MaximumHeartRateBpm xsi:type="HeartRateInBeatsPerMinute_t"')
+        maxBPMValElement = SubElement(maxBPMElement, "Value")
+        maxBPMValElement.text = str(int(maxBPM))
     
     # INTENSITY
     intensityElement = SubElement(lapElement, "Intensity")
