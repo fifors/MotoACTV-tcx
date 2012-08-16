@@ -33,7 +33,7 @@ then
     exit 1
 fi
 
-eval "${MOTO} ${IN} ${TIDY} > ${OUT}"
+eval "${MOTO} -i ${IN} ${TIDY} > ${OUT}"
 
 if [ ! $? ]
 then

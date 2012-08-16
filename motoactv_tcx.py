@@ -1,13 +1,14 @@
 #!/usr/bin/python
 # Requires ElementTree (http://effbot.org/zone/element-index.htm)
 # It helps to pipe the output of this script through tidy, e.g.:
-# ./motoactv_tcx.py rawDataCsv.csv | tidy -q -i -xml
+# ./motoactv_tcx.py -i rawDataCsv.csv | tidy -q -i -xml
 
 import time
 import csv
 import math
 import itertools
 import sys
+import getopt
 
 from elementtree.ElementTree import Element, SubElement, dump, tostring
 from elementtree.SimpleXMLWriter import XMLWriter
@@ -37,13 +38,29 @@ def earliestTimeInDict(theDict):
             earliestTime = epoch
             
         return earliestTime
+def usage():
+    print 'Usage: ' + sys.argv[0] + ' -i <CSV file>'
         
-def main():
-    if len(sys.argv) != 2: 
-            print 'Usage: ' + sys.argv[0] + ' <CSV file>' 
-            sys.exit(1) 
+def main(argv):
+
+    pathToCSV = ""
+
+    try:
+        opts, args = getopt.getopt(argv, "hi:",["ifile="])
+    except getopt.GetoptError:
+        usage()
+        sys.exit(1)
+
+    for opt, arg in opts:
+        if opt == '-h':
+            usage()
+            sys.exit()
+        elif opt in ("-i", "--ifile"):
+            pathToCSV = arg
         
-    pathToCSV = sys.argv[1]
+    if pathToCSV == "":
+        usage()
+        sys.exit(1) 
     
     f = open(pathToCSV)
     dataDict = csv.DictReader(f)
@@ -190,4 +207,4 @@ def main():
     
     print XMLHeader() + tostring(root)
 
-main()
+main(sys.argv[1:])
