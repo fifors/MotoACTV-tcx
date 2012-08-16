@@ -45,9 +45,10 @@ def main(argv):
 
     pathToCSV = ""
     forceHRM = False
+    removePauses = False
 
     try:
-        opts, args = getopt.getopt(argv, "hbi:",["ifile="])
+        opts, args = getopt.getopt(argv, "hbpi:",["ifile="])
     except getopt.GetoptError:
         usage()
         sys.exit(1)
@@ -60,6 +61,8 @@ def main(argv):
             pathToCSV = arg
         elif opt == '-b':
             forceHRM = True
+        elif opt == '-p':
+            removePauses = True
         
     if pathToCSV == "":
         usage()
@@ -99,75 +102,86 @@ def main(argv):
     maxBPM = 0    
     numRows = 0
     totalBPM = 0
+    epochStart = 0
+    diff = 0
     
     trackpoints = list()
     
     for row in dataDict:
-        trackpointElement = Element("Trackpoint")
-        trackpoints.append(trackpointElement)
-        
-        # TIME
-        epochMS = row['timestamp_epoch']
-        epoch = math.floor(int(epochMS) / 1000)
-        timeElement = SubElement(trackpointElement, "Time")
-        timeElement.text = stringGMTimeFromEpoch(epoch)
-
-        # POSITION
-        latValue = row['LATITUDE']
-        longValue = row['LONGITUDE']
-        
-        if (abs(float(latValue)) <= 180 and abs(float(longValue)) <= 180
-            and abs(float(latValue)) > 0.1 and abs(float(longValue)) > 0.1):
-            posElement = SubElement(trackpointElement, "Position")
-            latElement = SubElement(posElement, "LatitudeDegrees")
-            latElement.text = latValue
-            longElement = SubElement(posElement, "LongitudeDegrees")
-            longElement.text = longValue
-        
-        # Altitude
-        alt = row['ELEVATION']
-        altElement = SubElement(trackpointElement, "AltitudeMeters")
-        altElement.text = alt
-
-        # DISTANCE
-        distanceMeters = row['DISTANCE']
-        distElement = SubElement(trackpointElement, "DistanceMeters")
-        distElement.text = distanceMeters
-
-        # BPM
-        heartRate = math.trunc(float(row['HEARTRATE']))
-        if forceHRM or heartRate > 0:
-            bpmElement = SubElement(trackpointElement, 'HeartRateBpm xsi:type=\"HeartRateInBeatsPerMinute_t\"')
-            bpmValElement = SubElement(bpmElement, "Value")
-            bpmValElement.text = str(heartRate)
-                
-        extElement = SubElement(trackpointElement, 'Extensions')
-        
-        # SPEED
         speed = float(row['SPEED'])
-        speed *= MPS_TO_MPH
-        ns3Element = SubElement(extElement, 'ns3:TPX')
-        speedElement = SubElement(ns3Element, 'ns3:Speed')
-        speedElement.text = str(speed)
+        stepRate = int(row['STEP_RATE'])
+
+        if not removePauses or (speed > 0 and stepRate > 0):
+            if epochStart != 0:
+                diff += int(row['timestamp_epoch']) - epochStart
+                epochStart = 0
+
+            trackpointElement = Element("Trackpoint")
+            trackpoints.append(trackpointElement)
+        
+            # TIME
+            epochMS = row['timestamp_epoch']
+            epoch = math.floor((int(epochMS) - diff) / 1000)
+            timeElement = SubElement(trackpointElement, "Time")
+            timeElement.text = stringGMTimeFromEpoch(epoch)
+
+            # POSITION
+            latValue = row['LATITUDE']
+            longValue = row['LONGITUDE']
+        
+            if (abs(float(latValue)) <= 180 and abs(float(longValue)) <= 180
+                and abs(float(latValue)) > 0.1 and abs(float(longValue)) > 0.1):
+                posElement = SubElement(trackpointElement, "Position")
+                latElement = SubElement(posElement, "LatitudeDegrees")
+                latElement.text = latValue
+                longElement = SubElement(posElement, "LongitudeDegrees")
+                longElement.text = longValue
+        
+            # Altitude
+            alt = row['ELEVATION']
+            altElement = SubElement(trackpointElement, "AltitudeMeters")
+            altElement.text = alt
+
+            # DISTANCE
+            distanceMeters = row['DISTANCE']
+            distElement = SubElement(trackpointElement, "DistanceMeters")
+            distElement.text = distanceMeters
+
+            # BPM
+            heartRate = math.trunc(float(row['HEARTRATE']))
+            if forceHRM or heartRate > 0:
+                bpmElement = SubElement(trackpointElement, 'HeartRateBpm xsi:type=\"HeartRateInBeatsPerMinute_t\"')
+                bpmValElement = SubElement(bpmElement, "Value")
+                bpmValElement.text = str(heartRate)
                 
-        if lastTimeEpoch == 0 or epoch > lastTimeEpoch:
-            lastTimeEpoch = epoch
+            extElement = SubElement(trackpointElement, 'Extensions')
+        
+            # SPEED
+            speed *= MPS_TO_MPH
+            ns3Element = SubElement(extElement, 'ns3:TPX')
+            speedElement = SubElement(ns3Element, 'ns3:Speed')
+            speedElement.text = str(speed)
+                
+            if lastTimeEpoch == 0 or epoch > lastTimeEpoch:
+                lastTimeEpoch = epoch
 
-        if totalDistanceMeters == 0 or float(distanceMeters) > float(totalDistanceMeters):
-            totalDistanceMeters = distanceMeters
+            if totalDistanceMeters == 0 or float(distanceMeters) > float(totalDistanceMeters):
+                totalDistanceMeters = distanceMeters
 
-        rowCalories = row['CALORIEBURN']        
-        calories = rowCalories
+            rowCalories = row['CALORIEBURN']
+            calories = rowCalories
 
-        if maxBPM == 0 or heartRate > maxBPM:
-            maxBPM = heartRate
+            if maxBPM == 0 or heartRate > maxBPM:
+                maxBPM = heartRate
 
-        numRows += 1
-        totalBPM += heartRate
+            numRows += 1
+            totalBPM += heartRate
 
-        # CADENCE
-        cadenceElement = SubElement(trackpointElement, "Cadence")
-        cadenceElement.text = str(int(row['STEP_RATE']) / 2)
+            # CADENCE
+            cadenceElement = SubElement(trackpointElement, "Cadence")
+            cadenceElement.text = str(stepRate / 2)
+        elif epochStart == 0:
+            epochStart = int(row['timestamp_epoch'])
         
     # TIME    
     totalTimeSeconds = lastTimeEpoch - earliestEpoch
