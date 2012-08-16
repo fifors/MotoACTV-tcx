@@ -4,16 +4,13 @@ IN=$1
 OUT=$2
 MOTO="./motoactv_tcx.py"
 TD=`which tidy`
+TIDY='tidy -q -i -xml'
+FILE="OUT-"$$
 
 if [ ! -f ${MOTO} ]
 then
     echo ${MOTO} doesn\'t exist
     exit 1
-fi
-
-if [ ! -z ${TD} ]
-then
-    TIDY='| tidy -q -i -xml'
 fi
 
 if [ -z ${IN} ]
@@ -33,12 +30,19 @@ then
     exit 1
 fi
 
-eval "${MOTO} -i ${IN} ${TIDY} > ${OUT}"
+eval "${MOTO} -i ${IN} > ${FILE}"
 
-if [ ! $? ]
+if [ "$?" -ne "0" ]
 then
-    echo Had problems running the converter
-    rm -f ${OUT}
+    echo Problems running ${MOTO}, aborting.
+    rm ${FILE}
+    exit 1
+fi
+
+if [ ! -z ${TD} ]
+then
+   ${TIDY} ${FILE} > ${OUT}
+    rm ${FILE}
 fi
 
 echo "TCX file written to: ${OUT}"
