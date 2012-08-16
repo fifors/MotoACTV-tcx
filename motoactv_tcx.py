@@ -144,6 +144,10 @@ def main():
 
         numRows += 1
         totalBPM += heartRate
+
+        # CADENCE
+        cadenceElement = SubElement(trackpointElement, "Cadence")
+        cadenceElement.text = str(int(row['STEP_RATE']) / 2)
         
     # TIME    
     totalTimeSeconds = lastTimeEpoch - earliestEpoch
