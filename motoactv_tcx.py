@@ -100,6 +100,7 @@ def main(argv):
     maxSpeed = 0
     calories = 0.0
     maxBPM = 0    
+    maxSpeed = 0.0
     numRows = 0
     totalBPM = 0
     epochStart = 0
@@ -110,6 +111,9 @@ def main(argv):
     for row in dataDict:
         speed = float(row['SPEED'])
         stepRate = int(row['STEP_RATE'])
+
+        if speed > maxSpeed:
+            maxSpeed = speed
 
         if not removePauses or (speed > 0 and stepRate > 0):
             if epochStart != 0:
@@ -194,6 +198,11 @@ def main(argv):
     totalDistanceElement = SubElement(lapElement, "DistanceMeters")
     totalDistanceElement.text = totalDistanceMeters
     
+    # MAX SPEED
+    if maxSpeed > 0.0:
+        maxSpeedElement = SubElement(lapElement, "MaximumSpeed")
+        maxSpeedElement.text = str(maxSpeed)
+
     # CALORIES
     totalCalsElement = SubElement(lapElement, "Calories")
     totalCalsElement.text = str(int(float(calories)))
