@@ -46,9 +46,10 @@ def main(argv):
     pathToCSV = ""
     forceHRM = False
     removePauses = False
+    scale = 1.0
 
     try:
-        opts, args = getopt.getopt(argv, "hbpi:",["ifile="])
+        opts, args = getopt.getopt(argv, "hbps:i:",["scale=", "ifile="])
     except getopt.GetoptError:
         usage()
         sys.exit(1)
@@ -57,6 +58,8 @@ def main(argv):
         if opt == '-h':
             usage()
             sys.exit()
+        elif opt in ("-s", "--scale"):
+            scale = float(arg)
         elif opt in ("-i", "--ifile"):
             pathToCSV = arg
         elif opt == '-b':
@@ -109,7 +112,7 @@ def main(argv):
     trackpoints = list()
     
     for row in dataDict:
-        speed = float(row['SPEED'])
+        speed = scale * float(row['SPEED'])
         stepRate = int(row['STEP_RATE'])
 
         if speed > maxSpeed:
@@ -147,7 +150,7 @@ def main(argv):
             altElement.text = alt
 
             # DISTANCE
-            distanceMeters = row['DISTANCE']
+            distanceMeters = str(scale * float(row['DISTANCE']))
             distElement = SubElement(trackpointElement, "DistanceMeters")
             distElement.text = distanceMeters
 
