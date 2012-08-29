@@ -43,13 +43,14 @@ def usage():
         
 def main(argv):
 
+    scale = 1.0
     pathToCSV = ""
     forceHRM = False
     removePauses = False
-    scale = 1.0
+    sport = "Running"
 
     try:
-        opts, args = getopt.getopt(argv, "hbps:i:",["scale=", "ifile="])
+        opts, args = getopt.getopt(argv, "hbps:i:t:",["scale=", "ifile=", "sport="])
     except getopt.GetoptError:
         usage()
         sys.exit(1)
@@ -62,6 +63,8 @@ def main(argv):
             scale = float(arg)
         elif opt in ("-i", "--ifile"):
             pathToCSV = arg
+        elif opt in ("-t", "--sport"):
+            sport = arg
         elif opt == '-b':
             forceHRM = True
         elif opt == '-p':
@@ -90,7 +93,7 @@ def main(argv):
     root.set("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance")
 
     actsElement = SubElement(root, "Activities")
-    actElement = SubElement(actsElement, "Activity", Sport="Running")
+    actElement = SubElement(actsElement, "Activity", Sport=sport)
 
     idElement = SubElement(actElement, "Id")
     idElement.text = stringGMTimeFromEpoch(earliestEpoch)
