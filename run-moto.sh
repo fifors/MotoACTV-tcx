@@ -1,5 +1,38 @@
 #!/bin/bash
 
+ARGS=""
+FILE=""
+FORCE=0
+
+while getopts "fhbps:i:t:" OPT
+do
+    case ${OPT} in
+        f) FORCE=1
+           ;;
+        h) echo usage
+           exit 0
+           ;;
+        b) ARGS="${ARGS} -b"
+           ;;
+        p) ARGS="${ARGS} -p"
+           ;;
+        s) ARGS="${ARGS} -s ${OPTARG}"
+           ;;
+        i) FILE=${OPTARG}
+           ;;
+        t) ARGS="${ARGS} -t ${OPTARG}"
+           ;;
+        :) echo Option -${OPTARG} requires an argument
+           exit 1
+           ;;
+        *) echo Invalid option: -$OPTARG
+           exit 1
+           ;;
+    esac
+done
+
+shift $((OPTIND-1))
+
 IN=$1
 OUT=$2
 MOTO="./motoactv_tcx.py"
@@ -15,8 +48,13 @@ fi
 
 if [ -z ${IN} ]
 then
-    echo You must enter an input file
-    exit 1
+    if [ -z ${FILE} ]
+    then
+        echo You must enter an input file
+        exit 1
+    else
+        IN=${FILE}
+    fi
 fi
 
 if [ -z ${OUT} ]
@@ -24,13 +62,13 @@ then
     OUT=`echo ${IN} | sed -e "s/.csv$/.tcx/"`
 fi
 
-if [ -f ${OUT} ]
+if [ ! "${FORCE}" -eq "1" -a -f ${OUT} ]
 then
     echo ${OUT} exists
     exit 1
 fi
 
-eval "${MOTO} -i ${IN} > ${FILE}"
+eval "${MOTO} -i ${IN} ${ARGS} > ${FILE}"
 
 if [ "$?" -ne "0" ]
 then
