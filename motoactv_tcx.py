@@ -10,7 +10,7 @@ import itertools
 import sys
 import getopt
 
-from elementtree.ElementTree import Element, SubElement, dump, tostring
+from elementtree.ElementTree import Element, SubElement, Comment, dump, tostring
 from elementtree.SimpleXMLWriter import XMLWriter
 
 MPS_TO_MPH = 2.237
@@ -48,9 +48,13 @@ def main(argv):
     forceHRM = False
     removePauses = False
     sport = "Running"
+    lat = 0.0
+    longt = 0.0
+    ylat = 37.337766
+    ylong = -121.920347
 
     try:
-        opts, args = getopt.getopt(argv, "hbps:i:t:",["scale=", "ifile=", "sport="])
+        opts, args = getopt.getopt(argv, "hbpYs:i:t:l:",["scale=", "ifile=", "sport=", "location="])
     except getopt.GetoptError:
         usage()
         sys.exit(1)
@@ -65,6 +69,13 @@ def main(argv):
             pathToCSV = arg
         elif opt in ("-t", "--sport"):
             sport = arg
+        elif opt in ("-l", "--location"):
+            lat, longt = arg.split(",")
+            lat = float(lat)
+            longt = float(longt)
+        elif opt == '-Y':
+            lat = ylat
+            longt = ylong
         elif opt == '-b':
             forceHRM = True
         elif opt == '-p':
@@ -136,8 +147,12 @@ def main(argv):
             timeElement.text = stringGMTimeFromEpoch(epoch)
 
             # POSITION
-            latValue = row['LATITUDE']
-            longValue = row['LONGITUDE']
+            if (lat == 0.0 and longt == 0.0):
+                latValue = row['LATITUDE']
+                longValue = row['LONGITUDE']
+            else:
+                latValue = str(lat)
+                longValue = str(longt)
         
             if (abs(float(latValue)) <= 180 and abs(float(longValue)) <= 180
                 and abs(float(latValue)) > 0.1 and abs(float(longValue)) > 0.1):
@@ -237,6 +252,6 @@ def main(argv):
     for trackpoint in trackpoints:
         trackElement.append(trackpoint)
     
-    print XMLHeader() + tostring(root)
+    print XMLHeader() + tostring(Comment("Scale: "+str(scale))) + tostring(root)
 
 main(sys.argv[1:])

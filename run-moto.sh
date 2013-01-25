@@ -4,7 +4,7 @@ ARGS=""
 FILE=""
 FORCE=0
 
-while getopts "fhbps:i:t:" OPT
+while getopts "fhbpYs:i:t:l:" OPT
 do
     case ${OPT} in
         f) FORCE=1
@@ -14,6 +14,8 @@ do
            ;;
         b) ARGS="${ARGS} -b"
            ;;
+        Y) ARGS="${ARGS} -Y"
+           ;;
         p) ARGS="${ARGS} -p"
            ;;
         s) ARGS="${ARGS} -s ${OPTARG}"
@@ -21,6 +23,8 @@ do
         i) FILE=${OPTARG}
            ;;
         t) ARGS="${ARGS} -t ${OPTARG}"
+           ;;
+        l) ARGS="${ARGS} -l ${OPTARG}"
            ;;
         :) echo Option -${OPTARG} requires an argument
            exit 1
