@@ -128,6 +128,7 @@ def main(argv):
     for row in dataDict:
         speed = scale * float(row['SPEED'])
         stepRate = int(row['STEP_RATE'])
+        mCadence = int(row['CADENCE'])
 
         if speed > maxSpeed:
             maxSpeed = speed
@@ -204,7 +205,12 @@ def main(argv):
 
             # CADENCE
             cadenceElement = SubElement(trackpointElement, "Cadence")
-            cadenceElement.text = str(stepRate / 2)
+
+            if mCadence == 0:
+                cadenceElement.text = str(stepRate / 2)
+            else:
+                cadenceElement.text = str(mCadence)
+
         elif epochStart == 0:
             epochStart = int(row['timestamp_epoch'])
         
